@@ -3,6 +3,7 @@ contains the persongroup class
 """
 from Person import Person
 
+
 class PersonGroup:
     """description of class"""
 
@@ -13,17 +14,15 @@ class PersonGroup:
 
     def _retrieve_persons(self):
         url = "persongroups/{}/persons".format(self.persongroup_id)
-        data, response = self.connector.send_request("GET", url)
-        persons = self.connector.decode_json(data.read())
+        persons, response = self.connector.send_request("GET", url)
 
         person_list = []
         for person in persons:
             person_list.append(
                 Person(self.persongroup_id,
-                       person["personId"],
-                       person["PersistedFaceIds"],
+                       person,
                        self.connector
-                      )
+                       )
                 )
         return person_list
 
@@ -39,7 +38,10 @@ class PersonGroup:
         """
         Train a persongroup
         """
-        raise NotImplementedError
+        url = "persongroups/{}/train".format(self.persongroup_id)
+
+        data, response = self.connector.send_request("POST", url)
+        return response
 
     def update(self):
         """
@@ -47,4 +49,25 @@ class PersonGroup:
         """
         raise NotImplementedError
 
+    def remove_person(self, person_id):
+        """
+        Delete a person from the persongroup
+        :param person_id:
+        :return:
+        """
+        url = "persongroups/{}/persons/{}".format(self.persongroup_id, person_id)
 
+        data, response = self.connector.send_request("DELETE", url)
+        if response.status == 200:
+            self._remove_person(person_id)
+            return True
+        else:
+            return False
+
+    def _remove_person(self, person_id):
+        if self._persons is None:
+            return
+
+        for person in self._persons:
+            if person.person_id == person_id:
+                self._persons.remove(person)

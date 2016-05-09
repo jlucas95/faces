@@ -35,15 +35,19 @@ class Connector:
         """
         Sends a request to the API.
         """
-        if isinstance(body, dict):
-            body = self.encode_json(body)
-
         # Because having a dictionary as default value is dangerous
         if qs_args is None:
-            qs_args = {}
 
+            qs_args = {}
         if headers is None:
             headers = {}
+
+        # Check what content type header to include in the HTTP message
+        if hasattr(body, "read"):
+            headers["Content-Type"] = "application/octet-stream"
+        else:
+            body = self.encode_json(body)
+            headers["Content-Type"] = "application/json"
 
         connection = HTTPSConnection(self.host)
 
@@ -64,9 +68,7 @@ class Connector:
         data_bytes = response.read()
         data = data_bytes.decode()
         # TODO: Except data that is not JSON
-        data = self.decode_json(data)
+        if len(data) > 0:
+            data = self.decode_json(data)
 
         return data, response
-
-
-

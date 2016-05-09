@@ -6,12 +6,13 @@ contains Person class
 class Person:
     """A person contained within an persongroup"""
 
-    def __init__(self, persongroup_id, person_id, face_ids, connector):
+    def __init__(self, persongroup_id, person, connector):
         self.persongroup_id = persongroup_id
-        self.person_id = person_id
-        self.face_ids = face_ids
+        self.person_id = person["personId"]
+        self.face_ids = person["persistedFaceIds"]
         self.connection = connector
-
+        self.description = person["userData"]
+        self.name = person["name"]
 
     def get_face(self, face_id):
         """
@@ -25,27 +26,30 @@ class Person:
         data, response = self.connection.send_request("GET", url)
         return data
 
-    def  add_face(self, image, description="", target_face=None):
+    def add_face(self, image, description="", target_face=None):
         """
         adds a face to a person
         """
         try:
             # Tries to read a file-like object.
-            body = image.read()
+            image.read
         except AttributeError:
             # Except when the image is a link.
-            body = ({"url":image})
+            image = ({"url": image})
 
         url = "persongroups/{}/persons/{}/persistedFaces".format(
             self.persongroup_id,
             self.person_id)
 
+        headers = {"userdata": description}
+        if target_face is not None:
+            headers["targetFace"] = target_face
+
         data, response = self.connection.send_request("POST",
-                                                url,
-                                                {"userData":description, "targetFace": target_face},
-                                                body=body)
-        json = data.read()
-        face_id = self.connection.decode_json(json)["persistedFaceId"]
+                                                      url,
+                                                      headers=headers,
+                                                      body=image)
+        face_id = data["persistedFaceId"]
         self.face_ids.append(face_id)
         return face_id
 
@@ -74,5 +78,7 @@ class Person:
                 "userData": description}
         data, response = self.connection.send_request("PATCH", url, body=body)
 
-
-
+        if response.status == 200:
+            return True
+        else:
+            return False
