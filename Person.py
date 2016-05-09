@@ -4,7 +4,7 @@ contains Person class
 
 
 class Person:
-    """A person conatained within an persongroup"""
+    """A person contained within an persongroup"""
 
     def __init__(self, persongroup_id, person_id, face_ids, connector):
         self.persongroup_id = persongroup_id
@@ -22,42 +22,57 @@ class Person:
                                                                    self.person_id,
                                                                    face_id)
 
-        response = self.connection.send_request("GET", url)
-        return response
+        data, response = self.connection.send_request("GET", url)
+        return data
 
-    def  add_face(self, path, is_url, description="", target_face=None):
+    def  add_face(self, image, description="", target_face=None):
         """
         adds a face to a person
         """
+        try:
+            # Tries to read a file-like object.
+            body = image.read()
+        except AttributeError:
+            # Except when the image is a link.
+            body = ({"url":image})
 
-        if is_url:
-            body = self.connection.encode_json({"url":path})
-        else:
-            file = open(path)
-            body = file.read()
-            file.close()
+        url = "persongroups/{}/persons/{}/persistedFaces".format(
+            self.persongroup_id,
+            self.person_id)
 
-            url = "persongroups/{}/persons{}/persistedFaces".format(
-                self.persongroup_id,
-                self.person_id)
-
-        response = self.connection.send_request("POST",
+        data, response = self.connection.send_request("POST",
                                                 url,
                                                 {"userData":description, "targetFace": target_face},
                                                 body=body)
-        json = response.read()
+        json = data.read()
         face_id = self.connection.decode_json(json)["persistedFaceId"]
         self.face_ids.append(face_id)
+        return face_id
 
-    def delete_face(self):
+    def delete_face(self, face_id):
         """
         removes a face from a person
         """
-        raise NotImplementedError
+        url = "persongroups/{}/persons/{}/persistedFaces/{}".format(self.persongroup_id, self.person_id, face_id)
 
-    def update_person(self):
+        data, response = self.connection.send_request("DELETE", url)
+        if response.status == 200:
+            self.face_ids.remove(face_id
+                                 )
+            return True
+        else:
+            return False
+
+    def update_person(self, name, description):
         """
         update person info
         """
-        raise NotImplementedError
+
+        url = "persongroups/{}/persons/{}".format(self.persongroup_id, self.person_id)
+
+        body = {"name": name,
+                "userData": description}
+        data, response = self.connection.send_request("PATCH", url, body=body)
+
+
 

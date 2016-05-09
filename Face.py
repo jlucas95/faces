@@ -1,6 +1,8 @@
 """
 contains the face class
 """
+
+
 class Face:
     """description of class"""
     def __init__(self, face_id, user_data):
@@ -12,6 +14,3 @@ class Face:
         updates the description of a face
         """
         raise NotImplementedError
-
-
-        

@@ -13,8 +13,8 @@ class PersonGroup:
 
     def _retrieve_persons(self):
         url = "persongroups/{}/persons".format(self.persongroup_id)
-        response = self.connector.send_request("GET", url)
-        persons = self.connector.decode_json(response.read())
+        data, response = self.connector.send_request("GET", url)
+        persons = self.connector.decode_json(data.read())
 
         person_list = []
         for person in persons:

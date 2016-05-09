@@ -31,10 +31,9 @@ class Connector:
         """
         return self.decoder.decode(json)
 
-
     def send_request(self, method, url, qs_args=None, headers=None, body=None):
         """
-        Sends a request to the API
+        Sends a request to the API.
         """
         if isinstance(body, dict):
             body = self.encode_json(body)
@@ -46,23 +45,27 @@ class Connector:
         if headers is None:
             headers = {}
 
-
-
         connection = HTTPSConnection(self.host)
-        url = self.base_url.format(url)
-        url += "?{}".format(urlencode(qs_args))
-        apikey_header = {"Ocp-Apim-Subscription-Key": self.key}
 
-        # NOT AN ERROR
-        # Valid python 3.5 syntax. ** unpacks a dictionary
+        # Format the url
+        url = self.base_url.format(url)
+        if len(qs_args) > 0:
+            url += "?{}".format(urlencode(qs_args))
+
+        # Add api-key to the headers
+        apikey_header = {"Ocp-Apim-Subscription-Key": self.key}
         headers = {**headers, **apikey_header}
-        print(url)
-        print(type(body))
+
+        # Send the request
         connection.request(method, url, headers=headers, body=body)
+
+        # Read the response and try to decode JSON
         response = connection.getresponse()
         data_bytes = response.read()
         data = data_bytes.decode()
+        # TODO: Except data that is not JSON
         data = self.decode_json(data)
+
         return data, response
 
 

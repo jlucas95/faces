@@ -1,3 +1,5 @@
+from Person import Person
+from PersonGroup import PersonGroup
 """
 general face API functions
 """
@@ -19,7 +21,7 @@ class FaceAPI:
         """
         
         if isinstance(image, str):
-            body = {"url":path}
+            body = {"url":image}
             headers = {"Content-Type": "application/json"}
         else:
             headers = {"Content-Type": "application/octet-stream"}
@@ -28,11 +30,11 @@ class FaceAPI:
             except AttributeError as e:
                 raise ValueError("image argument must be string or support file like operations")
 
-        faces, response =  self.connector.send_request("POST",
-                                                        "detect",
-                                                        {"returnFaceId":"true"},
-                                                        headers=headers,
-                                                        body=body)
+        faces, response = self.connector.send_request("POST",
+                                                      "detect",
+                                                      {"returnFaceId":"true"},
+                                                      headers=headers,
+                                                      body=body)
         return faces
 
     def identify(self):
@@ -50,25 +52,51 @@ class FaceAPI:
         data, response = self.connector.send_request("POST", "verify", body=body)
         return data
 
-    def create_person(self):
+    def create_person(self, persongroup_id, name, description):
         """
-        create new person
+        Create new person
         """
-        raise NotImplementedError
+
+        body = {"name": name,
+                "userData": description}
+
+        url = "persongroups/{}/persons".format(persongroup_id)
+        print(url)
+        data, response = self.connector.send_request("PUT",
+                                    url,
+                                    body=body
+                                    )
+        print(data)
+        person_id = data["personId"]
+        return Person(persongroup_id, person_id, [], self.connector)
 
     def get_persongroups(self):
         """
-        get all persongroups
+        Returns a list of persongroups
         """
-        raise NotImplementedError
+
+        # Returns a list of dicts
+        group_list, response = self.connector.send_request("GET", "persongroups")
+        persongroup_list = []
+        for item in group_list:
+            group = PersonGroup(item["personGroupId"], self.connector)
+            persongroup_list.append(group)
+        return persongroup_list
 
     def create_persongroup(self, identifier, display_name, description):
         """
         create new persongroup
         """
+        url = "persongroups/{}".format(identifier)
+
         body = {"name":display_name,
                 "userData": description}
+
+
         self.connector.send_request("PUT",
-                                    "persongroups",
-                                    {"personGroupId":identifier},
+                                    url,
                                     body=body)
+
+
+        return PersonGroup(identifier, self.connector)
+
