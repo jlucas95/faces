@@ -7,17 +7,24 @@ from http.client import HTTPSConnection
 from urllib.parse import urlencode
 from json.encoder import JSONEncoder
 from json.decoder import JSONDecoder
+from datetime import datetime
 
 
 class Connector:
     """description of class"""
 
-    def __init__(self, api_key):
+    def __init__(self, api_key, logfile=None):
+
+        self.logfile = None
+        # TODO find a way to close the file or open it in the log function
+        if logfile is not None:
+            self.logfile = open(logfile, "a")
         self.key = api_key
         self.host = "api.projectoxford.ai"
         self.base_url = "/face/v1.0/{}"
         self.encoder = JSONEncoder()
         self.decoder = JSONDecoder()
+
 
     def encode_json(self, dictionary):
         """
@@ -57,8 +64,7 @@ class Connector:
             url += "?{}".format(urlencode(qs_args))
 
         # Add api-key to the headers
-        apikey_header = {"Ocp-Apim-Subscription-Key": self.key}
-        headers = {**headers, **apikey_header}
+        headers["Ocp-Apim-Subscription-Key"] = self.key
 
         # Send the request
         connection.request(method, url, headers=headers, body=body)
@@ -72,3 +78,12 @@ class Connector:
             data = self.decode_json(data)
 
         return data, response
+
+    def _log(self, *args):
+        if self.logfile is None:
+            return
+
+        timestamp = str(datetime.now())
+        logline = "{} -- {}".format(timestamp, args)
+
+        self.logfile.write(logline)

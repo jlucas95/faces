@@ -17,9 +17,3 @@ except KeyError:
 connector = Connector(key)
 api = FaceAPI(connector)
 
-group = PersonGroup("testgroup", connector)
-
-persons = group.get_persons()
-
-for person in persons:
-    group.remove_person(person.person_id)
