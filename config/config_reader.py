@@ -7,7 +7,14 @@ class ConfigReader():
         self.file_name = "config/settings.json"
 
     def _read_file(self):
-        file = open(self.file_name)
+        try:
+            file = open(self.file_name)
+        except FileNotFoundError:
+            file = self._make_file()
+            key = input("enter api key")
+            file.write("{{\"api-key\": \"{}\" }}")
+            file.close()
+
         content = file.read()
         file.close()
         return content
@@ -22,7 +29,8 @@ class ConfigReader():
         settings = self._decode(file)
         return settings
 
-
-
+    def _make_file(self):
+        file = open("config/settings", "w")
+        return file
 
 

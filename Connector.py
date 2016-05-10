@@ -13,12 +13,7 @@ from datetime import datetime
 class Connector:
     """description of class"""
 
-    def __init__(self, api_key, logfile=None):
-
-        self.logfile = None
-        # TODO find a way to close the file or open it in the log function
-        if logfile is not None:
-            self.logfile = open(logfile, "a")
+    def __init__(self, api_key):
         self.key = api_key
         self.host = "api.projectoxford.ai"
         self.base_url = "/face/v1.0/{}"
@@ -50,7 +45,7 @@ class Connector:
             headers = {}
 
         # Check what content type header to include in the HTTP message
-        if hasattr(body, "read"):
+        if hasattr(body, "read") or isinstance(body, bytes):
             headers["Content-Type"] = "application/octet-stream"
         else:
             body = self.encode_json(body)
@@ -78,12 +73,3 @@ class Connector:
             data = self.decode_json(data)
 
         return data, response
-
-    def _log(self, *args):
-        if self.logfile is None:
-            return
-
-        timestamp = str(datetime.now())
-        logline = "{} -- {}".format(timestamp, args)
-
-        self.logfile.write(logline)

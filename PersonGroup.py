@@ -71,3 +71,9 @@ class PersonGroup:
         for person in self._persons:
             if person.person_id == person_id:
                 self._persons.remove(person)
+
+    def find_person(self, person_id):
+        persons = self.get_persons()
+        for person in persons:
+            if person.person_id == person_id:
+                return person

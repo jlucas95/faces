@@ -25,13 +25,20 @@ class FaceAPI:
 
         faces, response = self.connector.send_request("POST",
                                                       "detect",
-                                                      {"returnFaceId": "true"},
+                                                      {"returnFaceId": "true",
+                                                      "returnFaceRectangle": "true"},
                                                       body=image)
         return faces
 
     def identify(self, face_ids, persongroup_id, candidates=1):
         """
-        identify unknown faces
+        Takes face ids as returned by self.detect and returns possible persons
+        Returns a list with dictionaries
+        The dicts have the following properties:
+        - faceId (str)
+        - candidates (List of dicts)
+          - personId (str)
+          - confidence (float)
         """
 
         body = {
@@ -67,6 +74,12 @@ class FaceAPI:
                                                      url,
                                                      body=body
                                                      )
+        # This API call only returns the person id
+        # So we add the function arguments to the data
+        data["name"] = name
+        data["userData"] = description
+        data["persistedFaceIds"] = []
+
         return Person(persongroup_id, data, self.connector)
 
     def get_persongroups(self):
@@ -77,6 +90,7 @@ class FaceAPI:
         # Returns a list of dicts
         group_list, response = self.connector.send_request("GET", "persongroups")
         persongroup_list = []
+
         for item in group_list:
             group = PersonGroup(item["personGroupId"], self.connector)
             persongroup_list.append(group)
