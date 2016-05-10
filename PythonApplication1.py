@@ -8,6 +8,8 @@ from PersonGroup import PersonGroup
 
 from PIL import Image, ImageDraw
 
+from io import BytesIO
+
 settings = ConfigReader().read_config()
 # TODO store some data locally to avoid having to call the API for everything.
 # Doing this will avoid being rate-limited
@@ -21,14 +23,14 @@ connector = Connector(key)
 api = FaceAPI(connector)
 
 
-
 def recognize(image, persongroup_id):
     """
     Opens a file and returns identities
-    :param filename:
+    :param image:
     :return:
     """
     # Detect faces
+
     faces = api.detect(image)
 
     face_ids = [face["faceId"] for face in faces]
@@ -55,24 +57,28 @@ def recognize(image, persongroup_id):
 def draw_face_rectangles(image, rectangle):
     im = Image.open(image)
     draw = ImageDraw.Draw(im)
-    right = rectangle["left"] + rectangle["width"]
-    bottom = rectangle["top"] + rectangle["height"]
+    x0 = rectangle["left"]
+    y0 = rectangle["top"]
+
+    x1 = rectangle["left"] + rectangle["width"]
+    y1 = rectangle["top"] + rectangle["height"]
 
     # Coordinates for the box
     # x0, y0, x1, y1
-    xy = [rectangle["top"],
-          rectangle["left"],
-          right,
-          bottom]
-    draw.rectangle(im, xy).show()
+    xy = [x0, y0, x1, y1]
+    draw.rectangle(xy)
+    im.show()
+
 
 if __name__ == "__main__":
-    file = open("images/identify.jpg", "rb")
+    file_name = "images/identify.jpg"
+    file = open(file_name, "rb")
     image = file.read()
     file.close()
+
     group = PersonGroup("testgroup", connector)
-    group.train()
-    known, uknown = recognize("images/identify.jpg", "testgroup")
+
+    known, uknown = recognize(image, "testgroup")
     print("==== known faces ====")
     for face in known:
         person = group.find_person(face["candidates"][0]["personId"])
@@ -83,4 +89,4 @@ if __name__ == "__main__":
     for face in uknown:
         print(face["faceId"])
         print(face["faceRectangle"])
-        draw_face_rectangles(image, face["faceRectangle"])
+        draw_face_rectangles(BytesIO(image), face["faceRectangle"])

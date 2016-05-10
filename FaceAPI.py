@@ -15,9 +15,9 @@ class FaceAPI:
 
     def detect(self, image):
         """
-        Detects faces in an image or linked image
+        Detects faces in an images or linked images
         Only accepts files or strings.
-        Strings are presumed to be a link to an image.
+        Strings are presumed to be a link to an images.
         """
 
         if isinstance(image, str):

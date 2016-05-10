@@ -34,7 +34,7 @@ class Person:
             # Tries to read a file-like object.
             image.read
         except AttributeError:
-            # Except when the image is a link.
+            # Except when the images is a link.
             image = ({"url": image})
 
         url = "persongroups/{}/persons/{}/persistedFaces".format(
