@@ -35,19 +35,24 @@ class Person:
             image.read
         except AttributeError:
             # Except when the images is a link.
-            image = ({"url": image})
+            if not isinstance(image, bytes):
+                image = ({"url": image})
 
         url = "persongroups/{}/persons/{}/persistedFaces".format(
             self.persongroup_id,
             self.person_id)
 
-        headers = {"userdata": description}
+        args = {"userdata": description}
         if target_face is not None:
-            headers["targetFace"] = target_face
+            left = target_face["left"]
+            top = target_face["top"]
+            width = target_face["width"]
+            height = target_face["height"]
+            args["targetFace"] = '{},{},{},{}'.format(left,top, width, height)
 
         data, response = self.connection.send_request("POST",
                                                       url,
-                                                      headers=headers,
+                                                      qs_args=args,
                                                       body=image)
         face_id = data["persistedFaceId"]
         self.face_ids.append(face_id)

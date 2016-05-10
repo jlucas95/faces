@@ -10,6 +10,9 @@ from PIL import Image, ImageDraw
 
 from io import BytesIO
 
+# TODO move dictionary keys to seperate constants
+# This should allow easy changes when the API changes
+
 settings = ConfigReader().read_config()
 # TODO store some data locally to avoid having to call the API for everything.
 # Doing this will avoid being rate-limited
@@ -22,6 +25,14 @@ except KeyError:
 connector = Connector(key)
 api = FaceAPI(connector)
 
+
+def remove_named_person(persongroup, name):
+    persons = persongroup.get_persons()
+
+    for person in persons:
+        if person.name == name:
+            print(person.person_id)
+            persongroup.remove_person(person.person_id)
 
 def recognize(image, persongroup_id):
     """
@@ -71,6 +82,8 @@ def draw_face_rectangles(image, rectangle):
 
 
 if __name__ == "__main__":
+
+
     file_name = "images/identify.jpg"
     file = open(file_name, "rb")
     image = file.read()
@@ -90,3 +103,8 @@ if __name__ == "__main__":
         print(face["faceId"])
         print(face["faceRectangle"])
         draw_face_rectangles(BytesIO(image), face["faceRectangle"])
+        name = input("name this person")
+        person = api.create_person("testgroup", name, "")
+        person.add_face(image, "", face["faceRectangle"])
+
+
