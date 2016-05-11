@@ -43,6 +43,13 @@ class PersonGroup:
         data, response = self.connector.send_request("POST", url)
         return response
 
+    def train_async(self):
+        """
+        implements the same function as train, but does not block until the training is complete
+        :return:
+        """
+        raise NotImplementedError
+
     def update(self):
         """
         Update the display name and description of a group

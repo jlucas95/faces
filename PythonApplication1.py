@@ -13,8 +13,19 @@ from io import BytesIO
 # TODO move dictionary keys to seperate constants
 # This should allow easy changes when the API changes
 
-settings = ConfigReader().read_config()
+# TODO Store faces of known Persons to increase accuracy
+# Include yaw, pitch and roll info to choose which face to remove.
+# A more diverse set of faces increases the chances of detecting a person
+
+# TODO handle incorrect unknown face
+# A face belonging to a known person, but not identified as being such.
+# This situation should not create a new person, but there is no way to
+# know whether the person is truly unknown or just not recognize.
+
 # TODO store some data locally to avoid having to call the API for everything.
+
+
+settings = ConfigReader().read_config()
 # Doing this will avoid being rate-limited
 try:
     key = settings["api-key"]
@@ -25,8 +36,14 @@ except KeyError:
 connector = Connector(key)
 api = FaceAPI(connector)
 
+def print_persons(persongrou_id):
+    group = PersonGroup(persongrou_id, connector)
+    persons = group.get_persons()
+    for person in persons:
+        print(person.name, ": ", person.person_id)
 
-def remove_named_person(persongroup, name):
+def remove_named_person(persongroup_id, name):
+    persongroup = PersonGroup(persongroup_id, connector)
     persons = persongroup.get_persons()
 
     for person in persons:
@@ -79,16 +96,12 @@ def draw_face_rectangles(image, rectangle):
     xy = [x0, y0, x1, y1]
     draw.rectangle(xy)
     im.show()
+    pass
 
 
-if __name__ == "__main__":
 
 
-    file_name = "images/identify.jpg"
-    file = open(file_name, "rb")
-    image = file.read()
-    file.close()
-
+def classify_new(image):
     group = PersonGroup("testgroup", connector)
 
     known, uknown = recognize(image, "testgroup")
@@ -106,5 +119,15 @@ if __name__ == "__main__":
         name = input("name this person")
         person = api.create_person("testgroup", name, "")
         person.add_face(image, "", face["faceRectangle"])
+
+    group.train()
+
+
+
+if __name__ == "__main__":
+    file_name = "images/Dennis.jpg"
+    file = open(file_name, "rb")
+    classify_new(file.read())
+    file.close()
 
 
